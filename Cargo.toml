@@ -1,0 +1,11 @@
+[package]
+name = "beer-frontend"
+version = "0.1.0"
+authors = ["ChatPion <chatpion@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+orbtk = { git = "https://github.com/redox-os/orbtk.git", branch = "develop" }
+
