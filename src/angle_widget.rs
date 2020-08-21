@@ -89,8 +89,6 @@ impl AngleViewState {
             && *ctx.get_widget(self.mid_input).get::<bool>("valid")
             && *ctx.get_widget(self.high_input).get::<bool>("valid");
 
-        println!("{}", valid);
-
         ctx.widget().set::<bool>("valid", valid);
     }
 }
@@ -167,7 +165,7 @@ impl Template for AngleView {
                     .text(("value2", id))
                     .suffix("\'")
                     .neg_value(false)
-                    .max_value(5)
+                    .max_value(60)
                     .margin((5, 0, 5, 0))
                     .max_width(80)
                     .build(ctx)
@@ -177,7 +175,7 @@ impl Template for AngleView {
                     .text(("value3", id))
                     .suffix("\"")
                     .neg_value(false)
-                    .max_value(5)
+                    .max_value(60)
                     .margin((5, 0, 5, 0))
                     .max_width(80)
                     .build(ctx)
