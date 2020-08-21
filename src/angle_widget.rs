@@ -3,6 +3,14 @@ use super::angle_event::{AngleEvent};
 use super::data::Angle;
 use super::widgets::numeric_text_box::NumericTextBox;
 
+
+// --- KEYS ---
+
+static HIGH_INPUT: &str = "high_input";
+static MID_INPUT: &str = "mid_input";
+static LOW_INPUT: &str = "low_input";
+
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AngleType {
     RightAsc, Declination, None
@@ -17,10 +25,6 @@ impl Default for AngleType {
 enum Action {
     Update
 }
-
-static HIGH_INPUT: &str = "high_input";
-static MID_INPUT: &str = "mid_input";
-static LOW_INPUT: &str = "low_input";
 
 #[derive(Default, AsAny)]
 pub struct AngleViewState {
@@ -57,35 +61,7 @@ impl AngleViewState {
         }
     } 
 
-}
-
-
-impl State for AngleViewState {
-    fn init(&mut self, _: &mut Registry, ctx: &mut Context) {
-        self.angle = Angle(0, 0, 0);
-        angle_view(ctx.widget()).set_value1("0");
-        angle_view(ctx.widget()).set_value2("0");
-        angle_view(ctx.widget()).set_value3("0");
-
-        self.angle_type = *ctx.widget().get::<AngleType>("angle_type");
-
-        let first_angle = *ctx.widget().get::<bool>("first_angle");
-        angle_view(ctx.widget()).set_value1_suffix(first_symbol(first_angle));
-        angle_view(ctx.widget()).set_value1_max(first_max_value(first_angle));
-
-        self.high_input = ctx.entity_of_child(HIGH_INPUT).expect("AngleViewState.init(): the child high input could not be found!");
-        self.mid_input = ctx.entity_of_child(MID_INPUT).expect("AngleViewState.init(): the child mid input could not be found!");
-        self.low_input = ctx.entity_of_child(LOW_INPUT).expect("AngleViewState.init(): the child low input could not be found!");
-    }
-
-    fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
-        match &self.action {
-            Some(Update) => self.send_event(ctx), 
-            _ => ()
-        }
-        self.action = None;
-
-        // handle carries 
+    fn handle_carries(&mut self, ctx: &mut Context) {
         if *ctx.get_widget(self.low_input).get::<bool>("underflow") {
             ctx.get_widget(self.low_input).set("underflow", false);
             ctx.get_widget(self.mid_input).set("should_dec", true);
@@ -107,6 +83,53 @@ impl State for AngleViewState {
             self.send_event(ctx);
         }
     }
+
+    fn check_validity(&mut self, ctx: &mut Context) {
+        let valid = *ctx.get_widget(self.low_input).get::<bool>("valid") 
+            && *ctx.get_widget(self.mid_input).get::<bool>("valid")
+            && *ctx.get_widget(self.high_input).get::<bool>("valid");
+
+        println!("{}", valid);
+
+        ctx.widget().set::<bool>("valid", valid);
+    }
+}
+
+
+impl State for AngleViewState {
+    fn init(&mut self, _: &mut Registry, ctx: &mut Context) {
+        // initialize the inputs to zero
+        self.angle = Angle(0, 0, 0);
+        angle_view(ctx.widget()).set_value1("0");
+        angle_view(ctx.widget()).set_value2("0");
+        angle_view(ctx.widget()).set_value3("0");
+
+        self.angle_type = *ctx.widget().get::<AngleType>("angle_type");
+
+        // set variables according to the kind of angle (hour or degree)
+        let first_angle = *ctx.widget().get::<bool>("first_angle");
+        angle_view(ctx.widget()).set_value1_suffix(first_symbol(first_angle));
+        angle_view(ctx.widget()).set_value1_max(first_max_value(first_angle));
+
+        // fetch the inputs
+        self.high_input = ctx.entity_of_child(HIGH_INPUT)
+            .expect("AngleViewState.init(): the child high input could not be found!");
+        self.mid_input = ctx.entity_of_child(MID_INPUT)
+            .expect("AngleViewState.init(): the child mid input could not be found!");
+        self.low_input = ctx.entity_of_child(LOW_INPUT)
+            .expect("AngleViewState.init(): the child low input could not be found!");
+    } 
+
+    fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
+        match &self.action {
+            Some(Update) => self.send_event(ctx), 
+            _ => ()
+        }
+        self.action = None;
+
+        self.handle_carries(ctx);
+        self.check_validity(ctx);
+    }
 }
 
 widget!(AngleView<AngleViewState> {
@@ -119,7 +142,8 @@ widget!(AngleView<AngleViewState> {
     value1_max: usize,
     value1: String16,
     value2: String16,
-    value3: String16
+    value3: String16,
+    valid: bool
 });
 
 

@@ -69,6 +69,7 @@ impl NumericTextBoxState {
             Err(_) => {self.valid = false; self.value}
         };
         self.clamp_value();
+        ctx.widget().set::<bool>("valid", self.valid);
     }
 }
 
@@ -116,20 +117,42 @@ impl State for NumericTextBoxState {
 }
 
 widget!(NumericTextBox<NumericTextBoxState> {
+    /// true if value can be negative
     neg_value: bool,
+
+    /// max possible value (exclusive upper bound)
     max_value: usize,
-    max: f64,
+
+    /// text of the TextBox
     text: String16,
+
+    /// text after the TextBox. Used for the units
     suffix: String16,
+
+    /// true if an underflow happened
     underflow: bool,
+
+    /// true if an overflow happened
     overflow: bool,
+
+    /// true if value must be increased (used for carries)
     should_inc: bool,
+
+    /// true if value must be decreased (used for carries)
     should_dec: bool,
+
+    /// background of the TextBox
     background: Brush,
-    focused: bool
+
+    /// true if TextBox is focused
+    focused: bool,
+
+    /// true if value is valid (i.e. is a number and within the correct bounds)
+    valid: bool
 });
 
 
+/// Generate a button increasing or decreasing the value
 fn generate_mod_button(
     ctx: &mut BuildContext,
     id: Entity,
