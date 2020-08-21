@@ -1,5 +1,5 @@
 use orbtk::prelude::*;
-use super::angle_event::AngleEvent;
+use super::angle_event::{AngleEvent};
 use super::data::Angle;
 use super::widgets::numeric_text_box::NumericTextBox;
 
@@ -18,15 +18,27 @@ enum Action {
     Update
 }
 
+static HIGH_INPUT: &str = "high_input";
+static MID_INPUT: &str = "mid_input";
+static LOW_INPUT: &str = "low_input";
+
 #[derive(Default, AsAny)]
 pub struct AngleViewState {
     angle: Angle,
     action: Option<Action>,
-    angle_type: AngleType
+    angle_type: AngleType,
+
+    high_input: Entity,
+    mid_input: Entity,
+    low_input: Entity
 }
 
 fn first_symbol(first_angle: bool) -> &'static str {
     if first_angle {"°"} else {"h"}
+}
+
+fn first_max_value(first_angle: bool) -> usize {
+    if first_angle { 360 } else { 24 }
 }
 
 impl AngleViewState { 
@@ -43,7 +55,8 @@ impl AngleViewState {
         if let Some(e) = event {
             ctx.push_event(e);
         }
-    }
+    } 
+
 }
 
 
@@ -58,6 +71,11 @@ impl State for AngleViewState {
 
         let first_angle = *ctx.widget().get::<bool>("first_angle");
         angle_view(ctx.widget()).set_value1_suffix(first_symbol(first_angle));
+        angle_view(ctx.widget()).set_value1_max(first_max_value(first_angle));
+
+        self.high_input = ctx.entity_of_child(HIGH_INPUT).expect("AngleViewState.init(): the child high input could not be found!");
+        self.mid_input = ctx.entity_of_child(MID_INPUT).expect("AngleViewState.init(): the child mid input could not be found!");
+        self.low_input = ctx.entity_of_child(LOW_INPUT).expect("AngleViewState.init(): the child low input could not be found!");
     }
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
@@ -66,6 +84,28 @@ impl State for AngleViewState {
             _ => ()
         }
         self.action = None;
+
+        // handle carries 
+        if *ctx.get_widget(self.low_input).get::<bool>("underflow") {
+            ctx.get_widget(self.low_input).set("underflow", false);
+            ctx.get_widget(self.mid_input).set("should_dec", true);
+            self.send_event(ctx);
+        }
+        if *ctx.get_widget(self.low_input).get::<bool>("overflow") {
+            ctx.get_widget(self.low_input).set("overflow", false);
+            ctx.get_widget(self.mid_input).set("should_inc", true);
+            self.send_event(ctx);
+        }
+        if *ctx.get_widget(self.mid_input).get::<bool>("underflow") {
+            ctx.get_widget(self.mid_input).set("underflow", false);
+            ctx.get_widget(self.high_input).set("should_dec", true);
+            self.send_event(ctx);
+        }
+        if *ctx.get_widget(self.mid_input).get::<bool>("overflow") {
+            ctx.get_widget(self.mid_input).set("overflow", false);
+            ctx.get_widget(self.high_input).set("should_inc", true);
+            self.send_event(ctx);
+        }
     }
 }
 
@@ -73,7 +113,10 @@ widget!(AngleView<AngleViewState> {
     /// If true, then value1 is an angle, else it is an hour
     first_angle: bool,
     angle_type: AngleType,
+
+    // automatically set
     value1_suffix: String16,
+    value1_max: usize,
     value1: String16,
     value2: String16,
     value3: String16
@@ -85,31 +128,37 @@ impl Template for AngleView {
         self.name("Angleview").child(
             Stack::new().orientation("horizontal")
             .child(
-                TextBox::new()
+                NumericTextBox::new()
+                    .id(HIGH_INPUT)
                     .text(("value1", id))
-                    .max_width(50)
+                    .suffix(("value1_suffix", id))
+                    .neg_value(true)
+                    .max_value(("value1_max", id))
                     .margin((5, 0, 5, 0))
+                    .max_width(80)
                     .build(ctx)
-            ).child(
-                TextBlock::new().text(("value1_suffix", id)).font_size(25).build(ctx)
-            ).child(
-                TextBox::new()
-                    .text(("value2", id))
-                    .max_width(50)
-                    .margin((5, 0, 5, 0))
-                    .build(ctx)
-            ).child(
-                TextBlock::new().text("'").font_size(25).build(ctx)
             ).child(
                 NumericTextBox::new()
+                    .id(MID_INPUT)
+                    .text(("value2", id))
+                    .suffix("\'")
+                    .neg_value(false)
+                    .max_value(5)
+                    .margin((5, 0, 5, 0))
+                    .max_width(80)
+                    .build(ctx)
+            ).child(
+                NumericTextBox::new()
+                    .id(LOW_INPUT)
                     .text(("value3", id))
                     .suffix("\"")
-                    .max_width(50)
+                    .neg_value(false)
+                    .max_value(5)
                     .margin((5, 0, 5, 0))
+                    .max_width(80)
                     .build(ctx)
-            )/*.child(
-                TextBlock::new().text("\"").font_size(25).build(ctx)
-            )*/.build(ctx)
+            )
+            .build(ctx)
         )
     }
 }

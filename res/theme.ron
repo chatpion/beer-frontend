@@ -3,6 +3,9 @@ Theme (
         "tiny_button": ( 
             base: "base",
             properties: {
+                "height": 16,
+                "max_width": 16,
+                "spacing": 0,
                 "foreground": "$LINK_WATER",
                 "icon_brush": "$LINK_WATER",
                 "background": "$LYNCH",

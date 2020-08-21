@@ -1,1 +1,1 @@
-mod numeric_update;
+pub mod numeric_update;
