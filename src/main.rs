@@ -4,7 +4,7 @@ mod events;
 
 use orbtk::prelude::*;
 use std::collections::VecDeque;
-use widgets::angle::{AngleView};
+use widgets::angle::{AngleView, AngleType};
 use data::{Angle};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
@@ -42,12 +42,6 @@ pub struct MainViewState {
     // directional pad
     pressed_btn: Option<Direction>,
 
-    // geographical position
-    position: Angle, 
-
-    // space position
-    target: Angle,
-
     action: Vec<Option<UserEvent>>
 }
 
@@ -58,12 +52,11 @@ impl MainViewState {
 }
 
 impl State for MainViewState {
-    fn init(&mut self, _: &mut Registry, ctx: &mut Context) {
+    fn init(&mut self, _: &mut Registry, _: &mut Context) {
         self.action = vec![];
     }
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
-        
         for a in self.action.drain(..) {
             match a {
                 Some(UserEvent::BeginMove(d)) => {
@@ -79,7 +72,7 @@ impl State for MainViewState {
                 _ => ()
             }
             if let Some(e) = a {
-                ctx.widget().get_mut::<UserEventQueue>("userEventQueue").push_back(e)
+                ctx.widget().get_mut::<UserEventQueue>("user_event_queue").push_back(e)
             }
         }
     }
@@ -88,7 +81,7 @@ impl State for MainViewState {
 type UserEventQueue = VecDeque<UserEvent>;
 
 widget!(MainView<MainViewState> {
-    userEventQueue: UserEventQueue
+    user_event_queue: UserEventQueue
 });
 
 fn generate_pad_button(
@@ -147,7 +140,10 @@ impl Template for MainView {
                             .build(ctx)
                     )
                     .child(
-                        AngleView::new().first_angle(false).build(ctx)
+                        AngleView::new()
+                            .angle_type(AngleType::RightAsc)
+                            .first_angle(false)
+                            .build(ctx)
                     )
                     .build(ctx)
             ).child(
@@ -157,7 +153,10 @@ impl Template for MainView {
                             .text("Déclinaison")
                             .build(ctx)
                     ).child(
-                        AngleView::new().first_angle(true).build(ctx)
+                        AngleView::new()
+                            .angle_type(AngleType::Declination)
+                            .first_angle(true)
+                            .build(ctx)
                     ).build(ctx)
             ).child(
                 Grid::new() 

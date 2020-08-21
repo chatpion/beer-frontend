@@ -15,24 +15,19 @@ static LOW_INPUT: &str = "low_input";
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AngleType {
-    RightAsc, Declination, None
+    RightAsc, Declination
 }
 
-impl Default for AngleType {
-    fn default() -> Self {
-        AngleType::None
+impl IntoPropertySource<Option<AngleType>> for AngleType {
+    fn into_source(self) -> PropertySource<Option<AngleType>> {
+        PropertySource::Value(Some(self))
     }
-}
-
-enum Action {
-    Update
 }
 
 #[derive(Default, AsAny)]
 pub struct AngleViewState {
     angle: Angle,
-    action: Option<Action>,
-    angle_type: AngleType,
+    angle_type: Option<AngleType>,
 
     high_input: Entity,
     mid_input: Entity,
@@ -48,18 +43,15 @@ fn first_max_value(first_angle: bool) -> usize {
 }
 
 impl AngleViewState { 
-    fn action(&mut self, action: Action) {
-        self.action = Some(action);
-    }
-
     fn send_event(&mut self, ctx: &mut Context) {
-        let event = match self.angle_type {
-            AngleType::RightAsc => Some(AngleEvent::UpdateRightAsc(self.angle)),
-            AngleType::Declination => Some(AngleEvent::UpdateDeclination(self.angle)),
-            AngleType::None => None
-        }; 
-        if let Some(e) = event {
-            ctx.push_event(e);
+        if let Some(at) = self.angle_type {
+            let event = match at {
+                AngleType::RightAsc => Some(AngleEvent::UpdateRightAsc(self.angle)),
+                AngleType::Declination => Some(AngleEvent::UpdateDeclination(self.angle)),
+            }; 
+            if let Some(e) = event {
+                ctx.push_event(e);
+            }
         }
     } 
 
@@ -104,7 +96,7 @@ impl State for AngleViewState {
         angle_view(ctx.widget()).set_value2("0");
         angle_view(ctx.widget()).set_value3("0");
 
-        self.angle_type = *ctx.widget().get::<AngleType>("angle_type");
+        self.angle_type = *ctx.widget().get::<Option<AngleType>>("angle_type");
 
         // set variables according to the kind of angle (hour or degree)
         let first_angle = *ctx.widget().get::<bool>("first_angle");
@@ -121,21 +113,17 @@ impl State for AngleViewState {
     } 
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
-        match &self.action {
-            Some(Update) => self.send_event(ctx), 
-            _ => ()
-        }
-        self.action = None;
-
         self.handle_carries(ctx);
         self.check_validity(ctx);
     }
 }
 
+type OptionAngleType = Option<AngleType>;
+
 widget!(AngleView<AngleViewState> {
     /// If true, then value1 is an angle, else it is an hour
     first_angle: bool,
-    angle_type: AngleType,
+    angle_type: OptionAngleType,
 
     // automatically set
     value1_suffix: String16,

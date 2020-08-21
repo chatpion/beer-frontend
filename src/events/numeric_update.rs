@@ -5,8 +5,6 @@ use orbtk::prelude::*;
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum NumericUpdateEvent {
     Update(isize),
-    Overflow,
-    Underflow
 }
 
 pub type NumericUpdateHandlerFn = dyn Fn(&mut StatesContext, &NumericUpdateEvent) -> bool + 'static;

@@ -102,7 +102,6 @@ impl State for NumericTextBoxState {
                 match action {
                     Action::Inc => self.add_step_value(self.value + 1, ctx),
                     Action::Dec => self.add_step_value(self.value - 1, ctx), 
-                    _ => ()
                 }
             }
             self.action = None;
