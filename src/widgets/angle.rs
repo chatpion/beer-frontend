@@ -1,7 +1,9 @@
 use orbtk::prelude::*;
-use super::angle_event::{AngleEvent};
-use super::data::Angle;
-use super::widgets::numeric_text_box::NumericTextBox;
+use crate::{
+    events::angle::{AngleEvent}, 
+    data::Angle,
+    widgets::numeric_text_box::NumericTextBox
+};
 
 
 // --- KEYS ---

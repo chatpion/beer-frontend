@@ -2,7 +2,7 @@ pub use std::rc::Rc;
 
 use orbtk::prelude::*;
 
-use super::data::Angle;
+use crate::data::Angle;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum AngleEvent {

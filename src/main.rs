@@ -1,12 +1,10 @@
-mod angle_widget;
-mod angle_event;
 mod data;
 mod widgets;
 mod events;
 
 use orbtk::prelude::*;
 use std::collections::VecDeque;
-use angle_widget::{AngleView};
+use widgets::angle::{AngleView};
 use data::{Angle};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
