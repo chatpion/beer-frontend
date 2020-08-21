@@ -1,11 +1,25 @@
+mod angle_widget;
+mod angle_event;
+mod data;
+mod widgets;
+mod events;
+
 use orbtk::prelude::*;
 use std::collections::VecDeque;
+use angle_widget::{AngleView};
+use data::{Angle};
+use orbtk::theming::config::ThemeConfig;
+use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
 
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
-pub struct Angle {
-    angle: i16,
-    minutes: u8,
-    seconds: u8
+static EXT: &str = include_str!("../res/theme.ron");
+
+fn theme() -> Theme {
+    Theme::from_config(
+        ThemeConfig::from(DARK_THEME_RON)
+            .extend(ThemeConfig::from(EXT))
+            .extend(ThemeConfig::from(COLORS_RON))
+            .extend(ThemeConfig::from(FONTS_RON))
+    )
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -22,6 +36,7 @@ pub enum UserEvent {
     EndMove(Direction),
     R
 }
+
 
 
 #[derive(Default, AsAny)]
@@ -75,8 +90,7 @@ impl State for MainViewState {
 type UserEventQueue = VecDeque<UserEvent>;
 
 widget!(MainView<MainViewState> {
-    userEventQueue: UserEventQueue,
-    angle_1: String16
+    userEventQueue: UserEventQueue
 });
 
 fn generate_pad_button(
@@ -135,20 +149,17 @@ impl Template for MainView {
                             .build(ctx)
                     )
                     .child(
-                        TextBox::new()
-                            .text(("angle_1", id))
-                            .on_key_down(move |states, _| {
-                                state(id, states).action(Some(UserEvent::R));
-                                true
-                            })
-                            .build(ctx)
-                    ).build(ctx)
+                        AngleView::new().first_angle(false).build(ctx)
+                    )
+                    .build(ctx)
             ).child(
                 Stack::new().orientation("horizontal")
                     .child(
                         TextBlock::new()
                             .text("Déclinaison")
                             .build(ctx)
+                    ).child(
+                        AngleView::new().first_angle(true).build(ctx)
                     ).build(ctx)
             ).child(
                 Grid::new() 
@@ -169,6 +180,7 @@ impl Template for MainView {
 
 fn main() {
     Application::new()
+        .theme(theme())
         .window(|ctx| {
             Window::new()
                 .title("OrbTk - minimal example")
