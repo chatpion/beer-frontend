@@ -6,7 +6,7 @@ static ID_INPUT: &str = "numeric_text_box_input";
 
 enum Action {
     Inc, 
-    Dec,
+    Dec
 }
 
 
@@ -24,7 +24,9 @@ pub struct NumericTextBoxState {
 
     action: Option<Action>,
 
-    input_entity: Entity
+    input_entity: Entity, 
+
+    valid: bool
 }
 
 impl NumericTextBoxState {
@@ -40,6 +42,14 @@ impl NumericTextBoxState {
         }
     }
 
+    fn clamp_value(&mut self) {
+        if self.value < self.min_value {
+            self.value = self.min_value;
+        } else if self.value >= self.max_value {
+            self.value = self.max_value - 1;
+        }
+    }
+
     fn add_step_value(&mut self, new_value: i32, ctx: &mut Context) {
         if new_value < self.min_value {
             ctx.widget().set("underflow", true);
@@ -50,7 +60,15 @@ impl NumericTextBoxState {
         } else {
             self.value = new_value;
         }
-        ctx.get_widget(self.input_entity).set::<String16>("text", String16::from(self.value.to_string()));
+    }
+
+    fn check_validity(&mut self, ctx: &mut Context) {
+        let text = ctx.widget().get::<String16>("text").clone().as_string();
+        self.value = match text.parse::<i32>() {
+            Ok(v) => {self.valid = true; v}
+            Err(_) => {self.valid = false; self.value}
+        };
+        self.clamp_value();
     }
 }
 
@@ -61,26 +79,39 @@ impl State for NumericTextBoxState {
         self.neg_value = *ctx.widget().get::<bool>("neg_value"); 
         self.min_value = self.min_value();
         self.input_entity = ctx.entity_of_child(ID_INPUT).expect("NumericBoxTextState.init(): the child input could not be found!");
+
+        self.valid = false;
     }
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
-        if *ctx.widget().get::<bool>("should_inc") {
-            self.add_step_value(self.value + 1, ctx);
-        }
-        if *ctx.widget().get::<bool>("should_dec") {
-            self.add_step_value(self.value - 1, ctx);
-        }
+        self.check_validity(ctx);
 
-        ctx.widget().set("should_inc", false);
-        ctx.widget().set("should_dec", false);
-
-        if let Some(action) = &self.action {
-            match action {
-                Action::Inc => self.add_step_value(self.value + 1, ctx),
-                Action::Dec => self.add_step_value(self.value - 1, ctx)
+        if self.valid {
+            if *ctx.widget().get::<bool>("should_inc") {
+                self.add_step_value(self.value + 1, ctx);
             }
+            if *ctx.widget().get::<bool>("should_dec") {
+                self.add_step_value(self.value - 1, ctx);
+            }
+
+            ctx.widget().set("should_inc", false);
+            ctx.widget().set("should_dec", false);
+
+            if let Some(action) = &self.action {
+                match action {
+                    Action::Inc => self.add_step_value(self.value + 1, ctx),
+                    Action::Dec => self.add_step_value(self.value - 1, ctx), 
+                    _ => ()
+                }
+            }
+            self.action = None;
+        
+            ctx.widget().set::<String16>("text", String16::from(self.value.to_string()));
+
+            ctx.widget().set::<Brush>("background", "#3b434a".into());
+        } else {
+            ctx.widget().set::<Brush>("background", "#ff0000".into());
         }
-        self.action = None;
     }
 }
 
@@ -93,7 +124,9 @@ widget!(NumericTextBox<NumericTextBoxState> {
     underflow: bool,
     overflow: bool,
     should_inc: bool,
-    should_dec: bool
+    should_dec: bool,
+    background: Brush,
+    focused: bool
 });
 
 
@@ -124,6 +157,7 @@ impl Template for NumericTextBox {
             .underflow(false)
             .should_inc(false)
             .should_dec(false)
+            .background("#3b434a")
             .child(Stack::new().orientation("horizontal")
                 .child(TextBox::new()
                     .id(ID_INPUT)
@@ -132,6 +166,10 @@ impl Template for NumericTextBox {
                     .max_height(40)
                     .width(50)
                     .margin((2, 0, 2, 0))
+                    .background(id)
+                    .on_changed_filter(vec!["text, focus"])
+                    .lost_focus_on_activation(true)
+                    .focused(id)
                     .build(ctx))
                 .child(TextBlock::new()
                     .text(("suffix", id))
