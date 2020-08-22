@@ -7,8 +7,7 @@ use std::collections::VecDeque;
 use widgets::pad::{PadView};
 use widgets::rotation::{RotationView};
 use widgets::position::{PositionView};
-use data::{Angle, Direction};
-use events::user::{UserEvent, UserEventHandler};
+use events::user::{UserEvent};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
 
