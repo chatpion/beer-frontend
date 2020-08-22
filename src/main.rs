@@ -7,6 +7,7 @@ use std::collections::VecDeque;
 use widgets::pad::{PadView};
 use widgets::rotation::{RotationView};
 use data::{Angle, Direction};
+use events::user::{UserEvent, UserEventHandler};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
 
@@ -21,22 +22,15 @@ fn theme() -> Theme {
     )
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum UserEvent {
-    Zero,
-    Rotate(Angle, Angle),
-    UpdatePos(Angle, Angle),
-    BeginMove(Direction),
-    EndMove(Direction)
-}
-
-
-
 #[derive(Default, AsAny)]
 pub struct MainViewState {
+    user_event: Option<UserEvent>
 }
 
 impl MainViewState {
+    fn register_event(&mut self, evt: UserEvent) {
+        self.user_event = Some(evt);
+    }
 }
 
 impl State for MainViewState {
@@ -44,9 +38,10 @@ impl State for MainViewState {
     }
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
-//        if let Some(e) = a {
-//            ctx.widget().get_mut::<UserEventQueue>("user_event_queue").push_back(e)
-//        }
+        if let Some(e) = self.user_event {
+            println!("{:?}", e);
+            ctx.widget().get_mut::<UserEventQueue>("user_event_queue").push_back(e);
+        }
     }
 }
 
@@ -60,9 +55,19 @@ impl Template for MainView {
     fn template(self, id: Entity, ctx: &mut BuildContext) -> Self {
         self.name("MainView").width(212).height(700).child(
             Stack::new().spacing(10.0).child(
-                RotationView::new().build(ctx)
+                RotationView::new()
+                    .on_user_event(move |states, evt| {
+                        state(id, states).register_event(*evt);
+                        true
+                    })
+                    .build(ctx)
             ).child(
-                PadView::new().build(ctx)
+                PadView::new()
+                    .on_user_event(move |states, evt| {
+                        state(id, states).register_event(*evt);
+                        true
+                    })
+                    .build(ctx)
             )
             .build(ctx)
         )

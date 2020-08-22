@@ -107,6 +107,7 @@ impl State for NumericTextBoxState {
             self.action = None;
         
             ctx.widget().set::<String16>("text", String16::from(self.value.to_string()));
+            ctx.widget().set::<i32>("value", self.value);
 
             ctx.widget().set::<Brush>("background", "#3b434a".into());
         } else {
@@ -121,6 +122,8 @@ widget!(NumericTextBox<NumericTextBoxState> {
 
     /// max possible value (exclusive upper bound)
     max_value: usize,
+
+    value: i32,
 
     /// text of the TextBox
     text: String16,

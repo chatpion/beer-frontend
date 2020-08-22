@@ -78,12 +78,14 @@ impl AngleViewState {
         }
     }
 
-    fn check_validity(&mut self, ctx: &mut Context) {
+    fn check_validity(&mut self, ctx: &mut Context) -> bool {
         let valid = *ctx.get_widget(self.low_input).get::<bool>("valid") 
             && *ctx.get_widget(self.mid_input).get::<bool>("valid")
             && *ctx.get_widget(self.high_input).get::<bool>("valid");
 
         ctx.widget().set::<bool>("valid", valid);
+
+        valid
     }
 }
 
@@ -114,7 +116,16 @@ impl State for AngleViewState {
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
         self.handle_carries(ctx);
-        self.check_validity(ctx);
+        let valid = self.check_validity(ctx);
+
+        if valid {
+            self.angle = Angle(
+                *ctx.get_widget(self.high_input).get::<i32>("value") as i16,
+                *ctx.get_widget(self.mid_input).get::<i32>("value") as u8,
+                *ctx.get_widget(self.low_input).get::<i32>("value") as u8
+            );
+            ctx.widget().set::<Angle>("angle", self.angle);
+        }
     }
 }
 
@@ -131,7 +142,8 @@ widget!(AngleView<AngleViewState> {
     value1: String16,
     value2: String16,
     value3: String16,
-    valid: bool
+    valid: bool,
+    angle: Angle
 });
 
 

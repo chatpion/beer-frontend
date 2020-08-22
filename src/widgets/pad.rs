@@ -1,6 +1,7 @@
 use orbtk::prelude::*;
 
 use crate::data::Direction;
+use crate::events::user::{UserEvent, UserEventHandler};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Action {
@@ -32,20 +33,31 @@ impl State for PadViewState {
         for a in self.action.drain(..) {
             match a {
                 Action::BeginMove(d) => {
-                    println!("Begin move {:?}", d);
+                    ctx.push_event(UserEvent::BeginMove(d));
                     self.pressed_btn = Some(d);
                 },
                 Action::EndMove(d) => {
-                    println!("End move {:?}", d);
+                    ctx.push_event(UserEvent::EndMove(d));
                     self.pressed_btn = None;
                 },
-                Action::Zero => println!("Zero !"), 
+                Action::Zero => ctx.push_event(UserEvent::Zero), 
             }
         }
     }
 }
 
 widget!(PadView<PadViewState> {});
+
+impl PadView {
+    pub fn on_user_event<H: Fn(&mut StatesContext, &UserEvent) -> bool + 'static>(
+        self,
+        handler: H,
+    ) -> Self {
+        self.insert_handler(UserEventHandler {
+            handler: Rc::new(handler),
+        })
+    }
+}
 
 fn generate_pad_button(
     ctx: &mut BuildContext, 

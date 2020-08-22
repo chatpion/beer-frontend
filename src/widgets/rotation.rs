@@ -1,7 +1,9 @@
 use orbtk::prelude::*;
 
 use crate::{
-    widgets::angle::{AngleView, AngleType}
+    widgets::angle::{AngleView, AngleType},
+    events::user::{UserEvent, UserEventHandler},
+    data::{Angle}
 };
 
 
@@ -18,12 +20,17 @@ pub struct RotationViewState {
     right_asc_input: Entity,
     decl_input: Entity,
 
-    should_check_validity: bool
+    should_check_validity: bool,
+    button_pressed: bool
 }
 
 impl RotationViewState {
     fn check_validity(&mut self) {
         self.should_check_validity = true;
+    }
+
+    fn click(&mut self) {
+        self.button_pressed = true;
     }
 }
 
@@ -35,6 +42,7 @@ impl State for RotationViewState {
             .expect("RotationViewState.init(): the child decl_input could not be found!");
 
         self.should_check_validity = true;
+        self.button_pressed = false;
     }
 
     fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
@@ -45,6 +53,13 @@ impl State for RotationViewState {
         ctx.widget().set::<String16>("btn_text", if valid { BTN_TEXT_VALID.into() } else { BTN_TEXT_INVALID.into() });
 
         self.should_check_validity = false;
+
+        if self.button_pressed {
+            let ra = *ctx.get_widget(self.right_asc_input).get::<Angle>("angle");
+            let de = *ctx.get_widget(self.decl_input).get::<Angle>("angle");
+            ctx.push_event(UserEvent::Rotate(ra, de));
+        }
+        self.button_pressed = false;
     }
 }
 
@@ -53,6 +68,19 @@ widget!(RotationView<RotationViewState> {
     valid: bool, 
     btn_text: String16
 });
+
+
+impl RotationView {
+    pub fn on_user_event<H: Fn(&mut StatesContext, &UserEvent) -> bool + 'static>(
+        self,
+        handler: H,
+    ) -> Self {
+        self.insert_handler(UserEventHandler {
+            handler: Rc::new(handler),
+        })
+    }
+}
+
 
 impl Template for RotationView {
     fn template(self, id: Entity, ctx: &mut BuildContext) -> Self {
@@ -104,6 +132,10 @@ impl Template for RotationView {
                 Button::new()
                     .text(("btn_text", id))
                     .enabled(("valid", id))
+                    .on_click(move |states, _| {
+                        state(id, states).click();
+                        true
+                    })
                     .build(ctx)
             ).build(ctx)
         )
