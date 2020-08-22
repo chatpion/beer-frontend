@@ -10,7 +10,8 @@ pub enum UserEvent {
     Rotate(Angle, Angle),
     UpdatePos(Angle, Angle),
     BeginMove(Direction),
-    EndMove(Direction)
+    EndMove(Direction),
+    Position(Angle, Angle)
 }
 
 pub type UserHandlerFn = dyn Fn(&mut StatesContext, &UserEvent) -> bool + 'static;

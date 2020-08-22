@@ -1,7 +1,7 @@
 use orbtk::prelude::*;
 
 use crate::{
-    widgets::angle::{AngleView, AngleType},
+    widgets::angle::{AngleView},
     events::user::{UserEvent, UserEventHandler},
     data::{Angle}
 };
@@ -90,6 +90,7 @@ impl Template for RotationView {
             .child(Stack::new().spacing(10.0).child(
                 TextBlock::new()
                     .text("Tourner le téléscope")
+                    .font_size(25)
                     .build(ctx)
             ).child(
                 Stack::new().orientation("horizontal")
@@ -101,7 +102,6 @@ impl Template for RotationView {
                     .child(
                         AngleView::new()
                             .id(RIGHT_ASC)
-                            .angle_type(AngleType::RightAsc)
                             .first_angle(false)
                             .on_changed_filter(vec!["valid"])
                             .on_changed(move |states, _, _| {
@@ -119,7 +119,6 @@ impl Template for RotationView {
                     ).child(
                         AngleView::new()
                             .id(DECL)
-                            .angle_type(AngleType::Declination)
                             .first_angle(true)
                             .on_changed_filter(vec!["valid"])
                             .on_changed(move |states, _, _| {

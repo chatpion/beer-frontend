@@ -13,21 +13,9 @@ static MID_INPUT: &str = "mid_input";
 static LOW_INPUT: &str = "low_input";
 
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum AngleType {
-    RightAsc, Declination
-}
-
-impl IntoPropertySource<Option<AngleType>> for AngleType {
-    fn into_source(self) -> PropertySource<Option<AngleType>> {
-        PropertySource::Value(Some(self))
-    }
-}
-
 #[derive(Default, AsAny)]
 pub struct AngleViewState {
     angle: Angle,
-    angle_type: Option<AngleType>,
 
     high_input: Entity,
     mid_input: Entity,
@@ -43,38 +31,22 @@ fn first_max_value(first_angle: bool) -> usize {
 }
 
 impl AngleViewState { 
-    fn send_event(&mut self, ctx: &mut Context) {
-        if let Some(at) = self.angle_type {
-            let event = match at {
-                AngleType::RightAsc => Some(AngleEvent::UpdateRightAsc(self.angle)),
-                AngleType::Declination => Some(AngleEvent::UpdateDeclination(self.angle)),
-            }; 
-            if let Some(e) = event {
-                ctx.push_event(e);
-            }
-        }
-    } 
-
     fn handle_carries(&mut self, ctx: &mut Context) {
         if *ctx.get_widget(self.low_input).get::<bool>("underflow") {
             ctx.get_widget(self.low_input).set("underflow", false);
             ctx.get_widget(self.mid_input).set("should_dec", true);
-            self.send_event(ctx);
         }
         if *ctx.get_widget(self.low_input).get::<bool>("overflow") {
             ctx.get_widget(self.low_input).set("overflow", false);
             ctx.get_widget(self.mid_input).set("should_inc", true);
-            self.send_event(ctx);
         }
         if *ctx.get_widget(self.mid_input).get::<bool>("underflow") {
             ctx.get_widget(self.mid_input).set("underflow", false);
             ctx.get_widget(self.high_input).set("should_dec", true);
-            self.send_event(ctx);
         }
         if *ctx.get_widget(self.mid_input).get::<bool>("overflow") {
             ctx.get_widget(self.mid_input).set("overflow", false);
             ctx.get_widget(self.high_input).set("should_inc", true);
-            self.send_event(ctx);
         }
     }
 
@@ -97,8 +69,6 @@ impl State for AngleViewState {
         angle_view(ctx.widget()).set_value1("0");
         angle_view(ctx.widget()).set_value2("0");
         angle_view(ctx.widget()).set_value3("0");
-
-        self.angle_type = *ctx.widget().get::<Option<AngleType>>("angle_type");
 
         // set variables according to the kind of angle (hour or degree)
         let first_angle = *ctx.widget().get::<bool>("first_angle");
@@ -129,12 +99,9 @@ impl State for AngleViewState {
     }
 }
 
-type OptionAngleType = Option<AngleType>;
-
 widget!(AngleView<AngleViewState> {
     /// If true, then value1 is an angle, else it is an hour
     first_angle: bool,
-    angle_type: OptionAngleType,
 
     // automatically set
     value1_suffix: String16,

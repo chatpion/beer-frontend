@@ -6,6 +6,7 @@ use orbtk::prelude::*;
 use std::collections::VecDeque;
 use widgets::pad::{PadView};
 use widgets::rotation::{RotationView};
+use widgets::position::{PositionView};
 use data::{Angle, Direction};
 use events::user::{UserEvent, UserEventHandler};
 use orbtk::theming::config::ThemeConfig;
@@ -56,6 +57,13 @@ impl Template for MainView {
         self.name("MainView").width(212).height(700).child(
             Stack::new().spacing(10.0).child(
                 RotationView::new()
+                    .on_user_event(move |states, evt| {
+                        state(id, states).register_event(*evt);
+                        true
+                    })
+                    .build(ctx)
+            ).child(
+                PositionView::new()
                     .on_user_event(move |states, evt| {
                         state(id, states).register_event(*evt);
                         true
