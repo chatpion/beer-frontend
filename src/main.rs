@@ -4,7 +4,6 @@ mod events;
 mod custom_app;
 
 use orbtk::prelude::*;
-use std::collections::VecDeque;
 use widgets::pad::{PadView};
 use widgets::rotation::{RotationView};
 use widgets::position::{PositionView};
@@ -43,19 +42,14 @@ impl State for MainViewState {
     fn init(&mut self, _: &mut Registry, _: &mut Context) {
     }
 
-    fn update(&mut self, registry: &mut Registry, ctx: &mut Context) {
+    fn update(&mut self, registry: &mut Registry, _: &mut Context) {
         if let Some(e) = self.user_event {
             registry.get::<mpsc::Sender<UserEvent>>("sender").send(e).unwrap();
-            ctx.widget().get_mut::<UserEventQueue>("user_event_queue").push_back(e);
         }
     }
 }
 
-type UserEventQueue = VecDeque<UserEvent>;
-
-widget!(MainView<MainViewState> {
-    user_event_queue: UserEventQueue
-});
+widget!(MainView<MainViewState> {});
 
 impl Template for MainView {
     fn template(self, id: Entity, ctx: &mut BuildContext) -> Self {
@@ -104,7 +98,7 @@ fn main() {
         .run();
     });
 
-    for i in 0..5 {
+    for _ in 0..5 {
         println!("Received {:?}", rx.recv().unwrap());
     }
 

@@ -8,7 +8,6 @@ use crate::data::{Angle, Direction};
 pub enum UserEvent {
     Zero,
     Rotate(Angle, Angle),
-    UpdatePos(Angle, Angle),
     BeginMove(Direction),
     EndMove(Direction),
     Position(Angle, Angle)
