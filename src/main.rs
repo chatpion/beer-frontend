@@ -1,6 +1,7 @@
 mod data;
 mod widgets;
 mod events;
+mod custom_app;
 
 use orbtk::prelude::*;
 use std::collections::VecDeque;
@@ -10,6 +11,11 @@ use widgets::position::{PositionView};
 use events::user::{UserEvent};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
+use std::sync::mpsc;
+
+use std::thread;
+
+use custom_app::CustomApplication;
 
 static EXT: &str = include_str!("../res/theme.ron");
 
@@ -37,9 +43,9 @@ impl State for MainViewState {
     fn init(&mut self, _: &mut Registry, _: &mut Context) {
     }
 
-    fn update(&mut self, _: &mut Registry, ctx: &mut Context) {
+    fn update(&mut self, registry: &mut Registry, ctx: &mut Context) {
         if let Some(e) = self.user_event {
-            println!("{:?}", e);
+            registry.get::<mpsc::Sender<UserEvent>>("sender").send(e).unwrap();
             ctx.widget().get_mut::<UserEventQueue>("user_event_queue").push_back(e);
         }
     }
@@ -83,9 +89,11 @@ impl Template for MainView {
 
 
 fn main() {
-    Application::new()
+    let (sx, rx) = mpsc::channel();
+    let handle = thread::spawn(|| {
+        CustomApplication::new()
         .theme(theme())
-        .window(|ctx| {
+        .window(sx, |ctx| {
             Window::new()
                 .title("OrbTk - minimal example")
                 .position((100.0, 100.0))
@@ -94,9 +102,19 @@ fn main() {
                 .build(ctx)
         })
         .run();
+    });
+
+    for i in 0..5 {
+        println!("Received {:?}", rx.recv().unwrap());
+    }
+
+    handle.join().unwrap();
 }
 
 // helper to request MainViewState
 fn state<'a>(id: Entity, states: &'a mut StatesContext) -> &'a mut MainViewState {
     states.get_mut(id)
 }
+
+
+
