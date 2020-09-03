@@ -1,7 +1,7 @@
 use orbtk::prelude::*;
 
 use crate::data::Direction;
-use crate::events::user::{UserEvent, UserEventHandler};
+use crate::events::{UserEvent, UserEventHandler};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Action {

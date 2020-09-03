@@ -9,7 +9,7 @@ use orbtk::{
     theming::Theme,
 };
 
-use crate::events::user::UserEvent;
+use crate::events::UserEvent;
 
 /// The `Application` represents the entry point of an OrbTk based application.
 pub struct CustomApplication {

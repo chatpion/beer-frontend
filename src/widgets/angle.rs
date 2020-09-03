@@ -1,7 +1,7 @@
 use orbtk::prelude::*;
 use crate::{
     data::Angle,
-    widgets::numeric_text_box::NumericTextBox
+    widgets::NumericTextBox
 };
 
 

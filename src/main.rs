@@ -4,10 +4,8 @@ mod events;
 mod custom_app;
 
 use orbtk::prelude::*;
-use widgets::pad::{PadView};
-use widgets::rotation::{RotationView};
-use widgets::position::{PositionView};
-use events::user::{UserEvent};
+use widgets::{PadView, RotationView, PositionView};
+use events::{UserEvent};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
 use std::sync::mpsc;

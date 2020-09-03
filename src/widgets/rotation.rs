@@ -1,8 +1,8 @@
 use orbtk::prelude::*;
 
 use crate::{
-    widgets::angle::{AngleView},
-    events::user::{UserEvent, UserEventHandler},
+    widgets::{AngleView},
+    events::{UserEvent, UserEventHandler},
     data::{Angle}
 };
 
