@@ -1,18 +1,12 @@
-mod data;
-mod widgets;
-mod events;
-mod custom_app;
-
 use orbtk::prelude::*;
-use widgets::{PadView, RotationView, PositionView};
-use events::{UserEvent};
+use crate::{
+    widgets::{PadView, RotationView, PositionView},
+    events::{UserEvent},
+    custom_app::CustomApplication
+};
 use orbtk::theming::config::ThemeConfig;
 use orbtk::theme::{COLORS_RON, DARK_THEME_RON, FONTS_RON};
 use std::sync::mpsc;
-
-use std::thread;
-
-use custom_app::CustomApplication;
 
 static EXT: &str = include_str!("../res/theme.ron");
 
@@ -80,10 +74,8 @@ impl Template for MainView {
 }
 
 
-fn main() {
-    let (sx, rx) = mpsc::channel();
-    let handle = thread::spawn(|| {
-        CustomApplication::new()
+pub fn make_window(sx: mpsc::Sender<UserEvent>) {
+    CustomApplication::new()
         .theme(theme())
         .window(sx, |ctx| {
             Window::new()
@@ -94,14 +86,8 @@ fn main() {
                 .build(ctx)
         })
         .run();
-    });
-
-    for _ in 0..5 {
-        println!("Received {:?}", rx.recv().unwrap());
-    }
-
-    handle.join().unwrap();
 }
+
 
 // helper to request MainViewState
 fn state<'a>(id: Entity, states: &'a mut StatesContext) -> &'a mut MainViewState {
