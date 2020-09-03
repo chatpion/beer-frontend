@@ -122,7 +122,7 @@ impl Template for AngleView {
                     .id(HIGH_INPUT)
                     .text(("value1", id))
                     .suffix(("value1_suffix", id))
-                    .neg_value(true)
+                    .neg_value(false)
                     .max_value(("value1_max", id))
                     .margin((5, 0, 5, 0))
                     .max_width(80)
