@@ -66,7 +66,7 @@ fn generate_pad_button(
     column: usize,
     row: usize) -> Entity {
     let mut button = Button::new()
-        .min_size(72, 72)
+        .style("pad_button")
         .on_mouse_down(move |states, _| -> bool {
             state(id, states).action(
                 match dir {
